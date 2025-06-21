@@ -13,4 +13,7 @@ class Sector extends Model
     public function promotions() {
         return $this->hasMany(Promotion::class);
     }
+    public function sectors() {
+        return $this->hasMany(SectorYear::class);
+    }
 }

@@ -11,13 +11,13 @@
         <div class="col-12">
             <h4 class="my-3 font-medium text-color-avt">Filière(s) disponibles</h4>
             <div class="card shadow rounded p-4">
-                <form action="{{ route('sector.store') }}" method="POST">
+                <form action="{{ route('sectorbyyear.store') }}" method="POST">
                     @csrf
 
                     <div class="mb-4">
                         <label for="year" class="form-label fs-6 text-label">Année Scolaire</label>
                         <select class="form-select bg-form" name="year" id="year" required>
-                            <option selected disabled>Choisissez l'année scolaire</option>
+                            <option value="" selected disabled>Choisissez l'année scolaire</option>
                             @foreach ($years as $year)
                                 <option value="{{ $year->id }}">{{ $year->year }}</option>
                             @endforeach
@@ -25,11 +25,9 @@
                     </div>
 
                     <div class="d-flex justify-content-between my-2 flex-wrap">
-                        <div>
-                            <a class="btn btn-success fs-14" href="">
-                                <i class="fas fa-plus"></i> Nouvelle filière
-                            </a>
-                        </div>
+                        <a class="btn btn-success fs-14" href="{{ route('sector.create') }}">
+                            <i class="fas fa-plus"></i> Nouvelle filière
+                        </a>
                     </div>
 
                     <div class="mb-3 d-flex gap-2">
@@ -46,13 +44,15 @@
                                 </tr>
                             </thead>
                             <tbody id="sectorTableBody">
-                                <!-- Les lignes seront injectées ici -->
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted">Veuillez sélectionner une année scolaire.</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
 
                     <div class="mt-3 text-end">
-                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Enregistrer</button>
                     </div>
                 </form>
             </div>
@@ -64,44 +64,47 @@
 <script src="{{ asset('js/jquery-3.6.0.min.js') }}"></script>
 <script>
     $(document).ready(function () {
-        $('#year').change(function () {
-            let yearId = $(this).val();
+        $('#year').on('change', function () {
+            const yearId = $(this).val();
             if (!yearId) return;
 
+            $('#submitBtn').prop('disabled', false);
             $('#sectorTableBody').html('<tr><td colspan="2" class="text-center">Chargement...</td></tr>');
 
-            $.get('/sectors/by-year/' + yearId, function (data) {
-                let rows = '';
+            $.ajax({
+                url: `/sectors/by-year/${yearId}`,
+                type: 'GET',
+                success: function (data) {
+                    let rows = '';
 
-                if (data.sectors.length === 0) {
-                    rows = `<tr><td colspan="2" class="text-center text-muted">Aucune filière disponible pour cette année.</td></tr>`;
-                    $('#selectAll, #unselectAll').addClass('d-none');
-                } else {
-                    data.sectors.forEach(sector => {
-                        let isChecked = data.selected.includes(sector.id) ? 'checked' : '';
-                        rows += `
-                            <tr>
-                                <td>${sector.name_sector}</td>
-                                <td>
-                                    <input type="checkbox" name="sectors[]" value="${sector.id}" class="sector-checkbox" ${isChecked}>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                    $('#selectAll, #unselectAll').removeClass('d-none');
+                    if (!data.sectors.length) {
+                        rows = `<tr><td colspan="2" class="text-center text-muted">Aucune filière disponible pour cette année.</td></tr>`;
+                        $('#selectAll, #unselectAll').addClass('d-none');
+                    } else {
+                        data.sectors.forEach(sector => {
+                            const isChecked = data.selected.includes(sector.id) ? 'checked' : '';
+                            rows += `
+                                <tr>
+                                    <td>${sector.name_sector}</td>
+                                    <td class="text-center">
+                                        <input type="checkbox" name="sectors[]" value="${sector.id}" class="sector-checkbox" ${isChecked}>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        $('#selectAll, #unselectAll').removeClass('d-none');
+                    }
+
+                    $('#sectorTableBody').html(rows);
+                },
+                error: function () {
+                    $('#sectorTableBody').html('<tr><td colspan="2" class="text-center text-danger">Erreur lors du chargement.</td></tr>');
                 }
-
-                $('#sectorTableBody').html(rows);
             });
         });
 
-        $('#selectAll').click(function () {
-            $('.sector-checkbox').prop('checked', true);
-        });
-
-        $('#unselectAll').click(function () {
-            $('.sector-checkbox').prop('checked', false);
-        });
+        $('#selectAll').click(() => $('.sector-checkbox').prop('checked', true));
+        $('#unselectAll').click(() => $('.sector-checkbox').prop('checked', false));
     });
 </script>
 @endsection

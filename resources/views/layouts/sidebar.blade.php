@@ -58,13 +58,7 @@
             <a class="nav-link collapsed" data-bs-target="#settings-nav" data-bs-toggle="collapse" href="#">
                 <i class="bi bi-gear"></i><span>&nbsp;Paramètres</span><i class="bi bi-chevron-down ms-auto"></i>
             </a>
-            <ul id="settings-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-                <li>
-                    <a href="{{ route('sector.create') }}" class="text-decoration-none">
-                        <i class="bi bi-calendar2-day-fill"></i><span>&nbsp;Filière</span>
-                    </a>
-                </li>
-            </ul>
+
             <ul id="settings-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
                 <li>
                     <a href="{{ route('year.create') }}" class="text-decoration-none">
@@ -72,9 +66,18 @@
                     </a>
                 </li>
             </ul>
+
             <ul id="settings-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
                 <li>
-                    <a href="{{ route('promotion.create') }}" class="text-decoration-none">
+                    <a href="{{ route('sectorbyyear.create') }}" class="text-decoration-none">
+                        <i class="bi bi-calendar2-day-fill"></i><span>&nbsp;Filière</span>
+                    </a>
+                </li>
+            </ul>
+
+            <ul id="settings-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+                <li>
+                    <a href="{{ route('promotionbysector.create') }}" class="text-decoration-none">
                         <i class="bi bi-calendar2-day-fill"></i><span>&nbsp;Promotions</span>
                     </a>
                 </li>
