@@ -9,7 +9,7 @@ class PromotionSector extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['sector_year_id', 'promotion'];
+    protected $fillable = ['sector_year_id', 'promotion_sector'];
 
     public function sectorYear()
     {

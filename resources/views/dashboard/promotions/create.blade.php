@@ -5,44 +5,53 @@
 @endsection
 
 @section('content')
-<div class="container">
-    <h4 class="my-3">Sélection des promotions par filière</h4>
-    <form action="{{ route('promotionbysector.store') }}" method="POST">
-        @csrf
 
-        <div class="mb-4">
-            <label for="year" class="form-label fs-6 text-label">Année Scolaire</label>
-            <select class="form-select bg-form" name="year" id="year" required>
-                <option value="" selected disabled>Choisissez l'année scolaire</option>
-                @foreach ($years as $year)
-                    <option value="{{ $year->id }}">{{ $year->year }}</option>
-                @endforeach
-            </select>
+<div class="container-fluid">
+    <div class="row justify-content-center pb-5">
+        <div class="col-12">
+            <h4 class="my-3 font-medium text-color-avt">Promotions(s) disponibles</h4>
+            <div class="card shadow rounded p-4">
+                <form action="{{ route('promotionbysector.store') }}" method="POST">
+                    @csrf
+
+                    <div class="mb-4">
+                        <label for="year" class="form-label fs-6 text-label">Année Scolaire</label>
+                        <select class="form-select bg-form" name="year" id="year" required>
+                            <option value="" selected disabled>Choisissez l'année scolaire</option>
+                            @foreach ($years as $year)
+                                <option value="{{ $year->id }}">{{ $year->year }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-3 d-flex gap-2">
+                        <button type="button" id="selectAll" class="btn btn-sm btn-outline-primary d-none">Tout Sélectionner</button>
+                        <button type="button" id="unselectAll" class="btn btn-sm btn-outline-danger d-none">Tout Décocher</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Filière</th>
+                                    <th>Promotions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sectorTableBody">
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted">Veuillez sélectionner une année scolaire.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-3 text-end">
+                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Enregistrer</button>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <div class="mb-3 d-flex gap-2">
-            <button type="button" class="btn btn-outline-primary d-none" id="selectAll">Tout sélectionner</button>
-            <button type="button" class="btn btn-outline-danger d-none" id="unselectAll">Tout décocher</button>
-        </div>
-
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Filière</th>
-                    <th>Promotions</th>
-                </tr>
-            </thead>
-            <tbody id="sectorTableBody">
-                <tr>
-                    <td colspan="2" class="text-center">Veuillez d'abord choisir une année.</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="text-end">
-            <button class="btn btn-primary" id="submitBtn" disabled>Enregistrer</button>
-        </div>
-    </form>
+    </div>
 </div>
 @endsection
 
@@ -66,10 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     yearSelect.addEventListener('change', () => {
         const yearId = yearSelect.value;
-        console.log(yearId);
+        console.log("Année choisie :", yearId);
         if (!yearId) return;
 
         tableBody.innerHTML = `<tr><td colspan="2" class="text-center text-info">Chargement...</td></tr>`;
+
         fetch(`/promotion-sectors/${yearId}`)
             .then(res => res.json())
             .then(data => {
@@ -83,26 +93,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 tableBody.innerHTML = '';
                 sectors.forEach(sector => {
-                    console.log(sector.name_sector);
-                    
                     const sectorName = sector.name_sector;
+                    const sectorId = sector.id;
                     const row = document.createElement('tr');
+
+                    const promotionsHtml = ['2nde', '1ère', 'Tle'].map(promotion => {
+                        const value = `${promotion} ${sectorName}`;
+                        const id = slugify(value + '-' + sectorId);
+                        const isChecked = selected.includes(value) ? 'checked' : '';
+                        return `
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input promotion-checkbox"
+                                       type="checkbox"
+                                       name="sector_year_ids[${sectorId}][]"
+                                       id="${id}"
+                                       value="${value}"
+                                       ${isChecked}>
+                                <label class="form-check-label" for="${id}">${promotion}</label>
+                            </div>
+                        `;
+                    }).join('');
+
                     row.innerHTML = `
                         <td>${sectorName}</td>
-                        <td>
-                            ${['2nde', '1ère', 'Tle'].map(promotion => {
-                                const value = `${promotion} ${sectorName}`;
-                                const id = slugify(value);
-                                const isChecked = selected.includes(value) ? 'checked' : '';
-                                return `
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input promotion-checkbox" type="checkbox" name="promotions[]" id="${id}" value="${value}" ${isChecked}>
-                                        <label class="form-check-label" for="${id}">${promotion}</label>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </td>
+                        <td>${promotionsHtml}</td>
                     `;
+
                     tableBody.appendChild(row);
                 });
 

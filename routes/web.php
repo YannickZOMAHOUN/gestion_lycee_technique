@@ -45,3 +45,22 @@ Route::get('/sectors/by-year/{year}', [SectorYearController::class, 'getSectorsB
 Route::get('/sectors-by-year/{year}', [SectorController::class, 'getSectorsByYear']);
 Route::get('/promotions-by-sector/{sector}/year/{year}', [SectorController::class, 'getPromotionsBySectorAndYear']);
 Route::get('/promotion-sectors/{year}', [PromotionSectorController::class, 'getSectorsByYear'])->name('promotion-sectors.byYear');
+
+
+use App\Http\Controllers\PromotionClassroomController;
+
+// Affichage du formulaire
+Route::get('/classes/create', [PromotionClassroomController::class, 'create'])->name('promotion-classrooms.create');
+
+// Récupération des filières par année (AJAX)
+Route::get('/api/sectors-by-year/{yearId}', [PromotionClassroomController::class, 'getSectorsByYear']);
+
+// Récupération des promotions (AJAX)
+Route::get('/api/promotions/{yearId}/{sectorId}', [PromotionClassroomController::class, 'getPromotions']);
+
+// Enregistrement des classes
+Route::post('/classes/store', [PromotionClassroomController::class, 'store'])->name('promotion-classrooms.store');
+
+Route::get('/api/sectors-by-year/{year}', [SubjectController::class, 'getSectorsByYear']);
+Route::get('/api/promotion-classrooms/{year}/{sector}', [SubjectController::class, 'getClassroomsByYearSector']);
+Route::get('/api/old-subjects/{oldYear}/{sector}', [SubjectController::class, 'getOldSubjects']);

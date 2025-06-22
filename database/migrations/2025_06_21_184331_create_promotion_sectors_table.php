@@ -13,12 +13,11 @@ return new class extends Migration
     {
         Schema::create('promotion_sectors', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('year_id'); // 🔄 remplace sector_year_id pour correspondre à la logique de store()
+            $table->unsignedBigInteger('sector_year_id'); // 🔄 remplace sector_year_id pour correspondre à la logique de store()
             $table->string('promotion_sector'); // Ex : '2nde IMI'
             $table->timestamps();
-
-            $table->foreign('year_id')->references('id')->on('years')->onDelete('cascade');
-            $table->unique(['year_id', 'promotion_sector']);
+            $table->foreign('sector_year_id')->references('id')->on('sector_years')->onDelete('cascade');
+            $table->unique(['sector_year_id', 'promotion_sector']);
         });
     }
 

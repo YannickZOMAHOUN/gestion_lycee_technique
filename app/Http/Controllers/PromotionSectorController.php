@@ -19,7 +19,7 @@ class PromotionSectorController extends Controller
     public function getSectorsByYear($year)
     {
         try {
-            
+
             Log::info("Année sélectionnée : {$year}");
             $sectors = SectorYear::where('year_id', $year)
                 ->with('sector') // Relation vers `sectors`
@@ -46,44 +46,43 @@ class PromotionSectorController extends Controller
         }
     }
 
-    
-    public function store(Request $request)
-    {
-        $request->validate([
-            'year' => 'required|exists:years,id',
-            'promotions' => 'nullable|array',
-        ]);
-    
-        try {
-            // Supprimer les promotions déjà enregistrées pour cette année
-            PromotionSector::where('year_id', $request->year)->delete();
-    
-            $data = [];
-    
-            if (!empty($request->promotions)) {
-                $data = collect($request->promotions)->map(function ($value) use ($request) {
-                    return [
-                        'year_id' => $request->year,
-                        'promotion_sector' => $value, 
-                        
-                    ];
-                })->toArray();
-    
-                PromotionSector::insert($data);
+
+  public function store(Request $request)
+{
+    $request->validate([
+        'sector_year_ids' => 'required|array',
+    ]);
+
+    try {
+        // Supprimer les anciennes promotions enregistrées pour les sectors_years sélectionnés
+        PromotionSector::whereIn('sector_year_id', array_keys($request->sector_year_ids))->delete();
+
+        $data = [];
+
+        foreach ($request->sector_year_ids as $sectorYearId => $promotions) {
+            foreach ($promotions as $promotionLabel) {
+                $data[] = [
+                    'sector_year_id' => $sectorYearId,
+                    'promotion_sector' => $promotionLabel,
+                ];
             }
-    
-            // Log d'information
-            Log::info("Enregistrement des promotions pour l'année ID {$request->year}", [
-                'promotions' => $request->promotions ?? [],
-                'total' => count($data),
-            ]);
-    
-            return back()->with('success', 'Promotions enregistrées avec succès.');
-        } catch (\Exception $e) {
-            Log::error("Erreur à l'enregistrement des promotions : " . $e->getMessage());
-            return back()->with('error', 'Erreur lors de l’enregistrement.');
         }
+
+        PromotionSector::insert($data);
+
+        Log::info("Promotions enregistrées pour sectors_year_ids", [
+            'ids' => array_keys($request->sector_year_ids),
+            'total' => count($data),
+        ]);
+
+        return back()->with('success', 'Promotions enregistrées avec succès.');
+    } catch (\Exception $e) {
+        Log::error("Erreur lors de l'enregistrement des promotions : " . $e->getMessage());
+        return back()->with('error', 'Erreur lors de l’enregistrement.');
     }
-    
-    
+}
+
+
+
+
 }

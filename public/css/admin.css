@@ -1,8 +1,8 @@
 :root{
-    --primary-color: rgb(255, 128, 64) !important; /* Orange clair */
-    --secondary-color: rgb(204, 102, 51) !important; /* Orange foncé */
-    --bg-color: #F2F2F2 !important; /* Gris clair inchangé */
-    --gradient-color: linear-gradient(90deg, rgba(204,102,51,1) 0%, rgba(255,128,64,1) 100%) !important; /* Dégradé d'orange */
+    --primary-color: #4B9CD3 !important; /* Bleu clair */
+    --secondary-color: #1F3A93 !important; /* Bleu foncé */
+    --bg-color: #F2F2F2 !important; /* Gris clair */
+    --gradient-color: linear-gradient(90deg, rgba(31,58,147,1) 0%, rgba(75,156,211,1) 100%) !important; /* Dégradé de bleu */
 }
 
 body{
@@ -466,7 +466,7 @@ body{
     font-size: 11px;
     color: #fff;
     padding: 3px 6px;
-    background-color: rgb(255, 128, 64);
+    background-color: #4154f1;
 }
 
 .header .nav-item .badge.bg-danger {
@@ -618,7 +618,8 @@ body{
     align-items: center;
     flex-direction: column;
     justify-content: center;
-    background: linear-gradient(to top, #fff 45%, var(--primary-color) 40%);}
+    background: linear-gradient(to top, #fff 45%, var(--primary-color) 40%); /* Dégradé blanc vers bleu clair */
+}
 
 .login-wrapper-content {
     width: calc(382px + 96px);
@@ -651,15 +652,14 @@ body{
 }
 ::-webkit-scrollbar {
     width: 12px;
-    background-color: rgb(255, 128, 64);
+    background-color: #f5f5f5; /* Couleur de fond de la scrollbar */
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: rgb(204, 102, 51);
+    background-color: #007bff; /* Couleur du curseur */
     border-radius: 10px; /* Arrondir les bords */
     border: 2px solid #f5f5f5; /* Ajouter une bordure */
 }
-
 
 ::-webkit-scrollbar-thumb:hover {
     background-color: #0056b3; /* Couleur au survol */
