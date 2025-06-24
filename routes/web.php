@@ -10,6 +10,7 @@ use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\SectorYearController;
 use App\Http\Controllers\PromotionSectorController;
 use App\Http\Controllers\PromotionClassroomController;
+use App\Http\Controllers\StudentController;
 
 // Page d'accueil
 Route::get('/', fn () => view('accueil'))->name('dashboard');
@@ -24,6 +25,7 @@ Route::resources([
     'subject' => SubjectController::class,
     'sectorbyyear' => SectorYearController::class,
     'promotionbysector' => PromotionSectorController::class,
+    'student' => StudentController::class,
 ]);
 
 // Activation / Désactivation
@@ -56,3 +58,6 @@ Route::post('/subjects/store', [SubjectController::class, 'store'])->name('subje
 Route::get('/api/ratios/sectors/{yearId}', [RatioController::class, 'getSectorsByYear']);
 Route::get('/api/ratios/promotions/{yearId}/{sectorId}', [RatioController::class, 'getPromotionsByYearAndSector']);
 Route::get('/api/ratios/data/{promotionId}/{yearId}', [RatioController::class, 'getSubjectsAndClasses']);
+Route::get('/api/sectors-by-year/{yearId}', [StudentController::class, 'getSectorsByYear']);
+Route::get('/api/promotions-by-year-sector/{yearId}/{sectorId}', [StudentController::class, 'getPromotionsByYearSector']);
+Route::get('/api/classes-by-promotion/{promotionId}', [StudentController::class, 'getClassesByPromotion']);

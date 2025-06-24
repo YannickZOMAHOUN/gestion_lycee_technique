@@ -46,7 +46,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="{{ route('student.create') }}">
                         <i class="fas fa-user-plus"></i><span>&nbsp;Nouvel Elève</span>
                     </a>
                 </li>
