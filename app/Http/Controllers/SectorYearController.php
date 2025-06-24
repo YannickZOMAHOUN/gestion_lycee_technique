@@ -56,7 +56,7 @@ class SectorYearController extends Controller
             }
 
             DB::commit();
-            return redirect()->back()->with('success', 'Filières enregistrées avec succès.');
+            return redirect()->route('promotionbysector.create')->with('success', 'Filières enregistrées avec succès.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Une erreur est survenue : ' . $e->getMessage());

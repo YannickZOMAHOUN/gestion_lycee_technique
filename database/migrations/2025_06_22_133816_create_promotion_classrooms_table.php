@@ -12,11 +12,15 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('year_id');
             $table->unsignedBigInteger('sector_id');
+            $table->unsignedBigInteger('promotion_sector_id');
             $table->string('name');
             $table->timestamps();
 
             $table->foreign('year_id')->references('id')->on('years')->onDelete('cascade');
             $table->foreign('sector_id')->references('id')->on('sectors')->onDelete('cascade');
+            $table->foreign('promotion_sector_id')->references('id')->on('promotion_sectors')->onDelete('cascade');
+
+            $table->unique(['year_id', 'sector_id', 'promotion_sector_id', 'name'], 'unique_classroom');
         });
     }
 

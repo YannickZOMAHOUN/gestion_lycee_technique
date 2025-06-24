@@ -2,11 +2,12 @@
 
 @section('content')
 <div class="container">
-    <h3>Créer les classes</h3>
+    <h3 class="mb-4">Créer les classes</h3>
 
     @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
+
     <div class="card shadow rounded p-4">
         <form method="POST" action="{{ route('promotion-classrooms.store') }}">
             @csrf
@@ -21,13 +22,13 @@
                     </select>
                 </div>
                 <div class="col-12 col-md-4 mb-3">
-                    <label for="sector_id">Filière(s):</label>
-                    <select name="sector_id" id="sector_id" class="form-control" disabled required>
+                    <label for="sector_id">Filière:</label>
+                    <select name="sector_id" id="sector_id" class="form-control" required disabled>
                         <option value="">-- Choisir l’année d’abord --</option>
                     </select>
                 </div>
                 <div class="col-12 col-md-4 mb-3">
-                    <label for="general_count">Nombre général de classes</label>
+                    <label for="general_count">Nombre général de classes :</label>
                     <input type="number" id="general_count" class="form-control" placeholder="Ex: 2">
                 </div>
             </div>
@@ -63,10 +64,12 @@
 
     yearSelect.addEventListener('change', () => {
         const yearId = yearSelect.value;
+        if (!yearId) return;
+
         sectorSelect.innerHTML = `<option>Chargement...</option>`;
         sectorSelect.disabled = true;
 
-        fetch(`/api/sectors-by-year/${yearId}`)
+        fetch(`/api/classroom-sectors-by-year/${yearId}`)
             .then(res => res.json())
             .then(data => {
                 let options = `<option value="">-- Choisir une filière --</option>`;
@@ -82,8 +85,9 @@
     sectorSelect.addEventListener('change', () => {
         const yearId = yearSelect.value;
         const sectorId = sectorSelect.value;
+        if (!yearId || !sectorId) return;
 
-        fetch(`/api/promotions/${yearId}/${sectorId}`)
+        fetch(`/api/classroom-promotions/${yearId}/${sectorId}`)
             .then(res => res.json())
             .then(data => {
                 if (data.length === 0) {
@@ -96,8 +100,8 @@
                     rows += `
                         <tr>
                             <td>
-                                ${promotion}
-                                <input type="hidden" name="promotions[]" value="${promotion}">
+                                ${promotion.name}
+                                <input type="hidden" name="promotions[]" value="${promotion.id}">
                             </td>
                             <td>
                                 <input type="number" name="counts[]" class="form-control count-input" required>
@@ -105,6 +109,7 @@
                         </tr>
                     `;
                 });
+
                 promotionBody.innerHTML = rows;
             });
     });

@@ -84,6 +84,11 @@
                         <i class="fas fa-school"></i><span>&nbsp;Matières</span>
                     </a>
                 </li>
+                 <li>
+                    <a href="{{ route('ratio.create') }}">
+                        <i class="fas fa-school"></i><span>&nbsp;Coefficient</span>
+                    </a>
+                </li>
             </ul>
         </li>
 

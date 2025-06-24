@@ -12,8 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ratios', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        $table->id();
+        $table->unsignedBigInteger('year_id');
+        $table->unsignedBigInteger('promotion_sector_id');
+        $table->unsignedBigInteger('classroom_id');
+        $table->unsignedBigInteger('subject_id');
+        $table->integer('coefficient')->default(1);
+        $table->unique(['year_id', 'promotion_sector_id', 'classroom_id', 'subject_id'], 'unique_ratio');
+        $table->timestamps();
         });
     }
 

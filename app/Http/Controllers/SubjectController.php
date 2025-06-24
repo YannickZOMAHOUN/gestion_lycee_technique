@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\Year;
 use App\Models\SectorYear;
 use App\Models\Subject;
 use App\Models\PromotionSector;
 use App\Models\PromotionSubject;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class SubjectController extends Controller
 {
     public function create()
     {
-        $years = Year::orderByDesc('year')->get();
+        $years = Year::where('status', true)->get();
         $allSubjects = Subject::orderBy('name')->get();
         return view('dashboard.subjects.create', compact('years', 'allSubjects'));
     }
@@ -30,7 +30,6 @@ class SubjectController extends Controller
                     'name' => $sy->sector->name_sector
                 ];
             });
-
         return response()->json($sectors);
     }
 
@@ -43,32 +42,23 @@ class SubjectController extends Controller
         if (!$sectorYear) return response()->json([]);
 
         $promotions = PromotionSector::where('sector_year_id', $sectorYear->id)
-            ->get(['id', 'promotion_sector']);
+            ->get();
 
-        return response()->json($promotions);
-    }
+        $result = $promotions->map(function ($promotion) {
+            $subjects = PromotionSubject::where('promotion_sector_id', $promotion->id)
+                ->with('subject')
+                ->get()
+                ->pluck('subject.name')
+                ->toArray();
 
-    public function getOldSubjects($oldYearId, $sectorId)
-    {
-        $sectorYear = SectorYear::where('year_id', $oldYearId)
-            ->where('sector_id', $sectorId)->first();
+            return [
+                'id' => $promotion->id,
+                'promotion_sector' => $promotion->promotion_sector,
+                'subjects' => $subjects
+            ];
+        });
 
-        if (!$sectorYear) return response()->json([]);
-
-        $promotions = PromotionSector::where('sector_year_id', $sectorYear->id)->pluck('id');
-
-        $subjects = PromotionSubject::whereIn('promotion_sector_id', $promotions)
-            ->with('subject', 'promotion')
-            ->get()
-            ->groupBy('promotion_sector_id')
-            ->map(function ($items) {
-                return [
-                    'promotion' => $items[0]->promotion->promotion_sector,
-                    'subjects' => $items->pluck('subject.name')->toArray()
-                ];
-            });
-
-        return response()->json($subjects);
+        return response()->json($result);
     }
 
     public function store(Request $request)
@@ -80,19 +70,33 @@ class SubjectController extends Controller
             'subjects_by_promotion' => 'required|array',
         ]);
 
+        $sectorYear = SectorYear::where('year_id', $request->year_id)
+            ->where('sector_id', $request->sector_id)
+            ->firstOrFail();
+
         foreach ($request->promotion_ids as $index => $promotionId) {
-            $subjectNames = array_map('trim', explode(';', $request->subjects_by_promotion[$index]));
+            $promotion = PromotionSector::where('id', $promotionId)
+                ->where('sector_year_id', $sectorYear->id)
+                ->firstOrFail();
+
+            $subjectNames = array_filter(
+                array_map('trim', explode(';', $request->subjects_by_promotion[$index])),
+                fn($name) => !empty($name)
+            );
+
+            PromotionSubject::where('promotion_sector_id', $promotionId)->delete();
 
             foreach ($subjectNames as $name) {
                 $subject = Subject::firstOrCreate(['name' => $name]);
-
-                PromotionSubject::firstOrCreate([
+                PromotionSubject::create([
                     'promotion_sector_id' => $promotionId,
                     'subject_id' => $subject->id,
                 ]);
             }
+
+            Log::info("Matières enregistrées pour la promotion {$promotionId}: " . implode(', ', $subjectNames));
         }
 
-        return back()->with('success', 'Matières enregistrées pour les promotions.');
+        return redirect()->route('ratio.create')->with('success', 'Matières enregistrées avec succès.');
     }
 }

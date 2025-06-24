@@ -22,7 +22,7 @@ class YearController extends Controller
                 Year::query()->create([
                 'year'=>$request->year,
             ]);
-            return redirect()->back();
+            return redirect()->route('sectorbyyear.create');
         }catch (\Exception $e){
             Log::info($e->getMessage());
             abort(404);

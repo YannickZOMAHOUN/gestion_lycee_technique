@@ -75,7 +75,7 @@ class PromotionSectorController extends Controller
             'total' => count($data),
         ]);
 
-        return back()->with('success', 'Promotions enregistrées avec succès.');
+        return redirect()->route('promotion-classrooms.create')->with('success', 'Promotions enregistrées avec succès.');
     } catch (\Exception $e) {
         Log::error("Erreur lors de l'enregistrement des promotions : " . $e->getMessage());
         return back()->with('error', 'Erreur lors de l’enregistrement.');
