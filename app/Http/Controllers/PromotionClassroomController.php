@@ -28,21 +28,23 @@ class PromotionClassroomController extends Controller
             'counts.*' => 'required|integer|min:1'
         ]);
 
-        foreach ($request->promotions as $index => $promotionId) {
-            $count = $request->counts[$index];
+       foreach ($request->promotions as $index => $promotionId) {
+    $count = $request->counts[$index];
+    $baseName = PromotionSector::find($promotionId)->promotion_sector;
 
-            for ($i = 0; $i < $count; $i++) {
-                $letter = chr(65 + $i); // A, B, C, etc.
-                $name = PromotionSector::find($promotionId)->promotion_sector . '-' . $letter;
+    for ($i = 0; $i < $count; $i++) {
+        // Si une seule classe, ne pas ajouter de lettre
+        $name = $count === 1 ? $baseName : $baseName . '-' . chr(65 + $i); // A, B, C...
 
-                PromotionClassroom::updateOrCreate([
-                    'year_id' => $request->year_id,
-                    'sector_id' => $request->sector_id,
-                    'promotion_sector_id' => $promotionId,
-                    'name' => $name
-                ]);
-            }
-        }
+        PromotionClassroom::updateOrCreate([
+            'year_id' => $request->year_id,
+            'sector_id' => $request->sector_id,
+            'promotion_sector_id' => $promotionId,
+            'name' => $name
+        ]);
+    }
+}
+
 
         return redirect()->route('subject.create')->with('success', 'Les classes ont été enregistrées avec succès.');
     }

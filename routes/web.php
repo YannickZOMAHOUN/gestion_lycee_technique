@@ -61,3 +61,5 @@ Route::get('/api/ratios/data/{promotionId}/{yearId}', [RatioController::class, '
 Route::get('/api/sectors-by-year/{yearId}', [StudentController::class, 'getSectorsByYear']);
 Route::get('/api/promotions-by-year-sector/{yearId}/{sectorId}', [StudentController::class, 'getPromotionsByYearSector']);
 Route::get('/api/classes-by-promotion/{promotionId}', [StudentController::class, 'getClassesByPromotion']);
+Route::get('/api/classes-by-promotion/{promotionId}', [StudentController::class, 'getClassesByPromotion']);
+Route::post('/import', [\App\Http\Controllers\StudentController::class, 'import'])->name('import');

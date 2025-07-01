@@ -1,7 +1,6 @@
 @extends('layouts.template')
 
 @section('content')
-
 <div class="row col-12 pb-5">
     <div class="d-flex justify-content-between my-2 flex-wrap">
         <div class="text-color-avt fs-22 font-medium">Importation de la liste des élèves</div>
@@ -13,7 +12,7 @@
     </div>
 
     <div class="card py-5">
-        <form action="" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('import') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="row mb-3">
                 <div class="col-md-3">
@@ -61,22 +60,32 @@
     </div>
 
     <div class="card py-5">
-        <form action="{{ route('student.store') }}" method="POST">
+        <form id="addStudentForm" action="{{ route('student.store') }}" method="POST">
             @csrf
             <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="year_id">Année scolaire:</label>
-                    <select name="year_id" id="year_id" class="form-control" required>
+                <div class="col-md-3">
+                    <label for="add_year_id">Année scolaire:</label>
+                    <select name="year_id" id="add_year_id" class="form-control" required>
                         <option value="">-- Choisissez une année --</option>
                         @foreach($years as $year)
-                            <option value="{{ $year->id }}">{{ $year->year }}</option>
+                            <option value="{{ $year->id }}" {{ old('year_id') == $year->id ? 'selected' : '' }}>{{ $year->year }}</option>
                         @endforeach
                     </select>
                 </div>
 
-                <div class="col-md-6">
-                    <label for="classroom_id">Classe:</label>
-                    <select name="classroom_id" id="classroom_id" class="form-control" disabled required></select>
+                <div class="col-md-3">
+                    <label for="add_sector_id">Filière :</label>
+                    <select name="sector_id" id="add_sector_id" class="form-control" disabled required></select>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="add_promotion_id">Promotion :</label>
+                    <select name="promotion_id" id="add_promotion_id" class="form-control" disabled required></select>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="add_classroom_id">Classe :</label>
+                    <select name="classroom_id" id="add_classroom_id" class="form-control" disabled required></select>
                 </div>
             </div>
 
@@ -87,7 +96,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label for="sex" class="form-label font-medium text-color-avt">Sexe</label>
+                    <label for="sex">Sexe</label>
                     <select name="sex" id="sex" class="form-control" required>
                         <option value="M" {{ old('sex') == 'M' ? 'selected' : '' }}>Masculin</option>
                         <option value="F" {{ old('sex') == 'F' ? 'selected' : '' }}>Féminin</option>
@@ -97,22 +106,22 @@
 
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label for="name" class="form-label font-medium text-color-avt">Nom de l'élève</label>
+                    <label for="name">Nom</label>
                     <input type="text" name="name" id="name" class="form-control bg-form" value="{{ old('name') }}">
                 </div>
                 <div class="col-md-6">
-                    <label for="surname" class="form-label font-medium text-color-avt">Prénom</label>
+                    <label for="surname">Prénom</label>
                     <input type="text" name="surname" id="surname" class="form-control bg-form" value="{{ old('surname') }}">
                 </div>
             </div>
 
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label for="birthday" class="form-label font-medium text-color-avt">Date de Naissance</label>
+                    <label for="birthday">Date de Naissance</label>
                     <input type="date" name="birthday" id="birthday" class="form-control bg-form" value="{{ old('birthday') }}">
                 </div>
                 <div class="col-md-6">
-                    <label for="birthplace" class="form-label font-medium text-color-avt">Lieu de Naissance</label>
+                    <label for="birthplace">Lieu de Naissance</label>
                     <input type="text" name="birthplace" id="birthplace" class="form-control bg-form" value="{{ old('birthplace') }}">
                 </div>
             </div>
@@ -124,12 +133,11 @@
         </form>
     </div>
 </div>
-
 @endsection
 
 @section('another_JS')
 <script>
-    // Fonctions communes pour remplir <select>
+    // Fonction générique de chargement dynamique
     async function fetchOptions(url, selectElement, placeholder = '-- Choisissez --') {
         selectElement.innerHTML = `<option value="">${placeholder}</option>`;
         selectElement.disabled = true;
@@ -141,11 +149,11 @@
             });
             selectElement.disabled = false;
         } catch (e) {
-            console.error('Erreur chargement options:', e);
+            console.error('Erreur de chargement :', e);
         }
     }
 
-    // Import form selects
+    // -------------------- Import --------------------
     const importYear = document.getElementById('import_year_id');
     const importSector = document.getElementById('import_sector_id');
     const importPromotion = document.getElementById('import_promotion_id');
@@ -153,15 +161,6 @@
 
     importYear.addEventListener('change', () => {
         const yearId = importYear.value;
-        if (!yearId) {
-            importSector.innerHTML = '';
-            importSector.disabled = true;
-            importPromotion.innerHTML = '';
-            importPromotion.disabled = true;
-            importClassroom.innerHTML = '';
-            importClassroom.disabled = true;
-            return;
-        }
         fetchOptions(`/api/sectors-by-year/${yearId}`, importSector, '-- Choisissez une filière --');
         importPromotion.innerHTML = '';
         importPromotion.disabled = true;
@@ -172,13 +171,6 @@
     importSector.addEventListener('change', () => {
         const yearId = importYear.value;
         const sectorId = importSector.value;
-        if (!sectorId) {
-            importPromotion.innerHTML = '';
-            importPromotion.disabled = true;
-            importClassroom.innerHTML = '';
-            importClassroom.disabled = true;
-            return;
-        }
         fetchOptions(`/api/promotions-by-year-sector/${yearId}/${sectorId}`, importPromotion, '-- Choisissez une promotion --');
         importClassroom.innerHTML = '';
         importClassroom.disabled = true;
@@ -186,42 +178,42 @@
 
     importPromotion.addEventListener('change', () => {
         const promotionId = importPromotion.value;
-        if (!promotionId) {
-            importClassroom.innerHTML = '';
-            importClassroom.disabled = true;
-            return;
-        }
         fetchOptions(`/api/classes-by-promotion/${promotionId}`, importClassroom, '-- Choisissez une classe --');
     });
 
-
-    // Add form selects
-    const addYear = document.getElementById('year_id');
-    const addClassroom = document.getElementById('classroom_id');
+    // -------------------- Ajout --------------------
+    const addYear = document.getElementById('add_year_id');
+    const addSector = document.getElementById('add_sector_id');
+    const addPromotion = document.getElementById('add_promotion_id');
+    const addClassroom = document.getElementById('add_classroom_id');
 
     addYear.addEventListener('change', () => {
         const yearId = addYear.value;
-        if (!yearId) {
-            addClassroom.innerHTML = '';
-            addClassroom.disabled = true;
-            return;
-        }
-        // Pour simplifier ici, on récupère toutes les classes liées à l'année, ou mieux, les classes de toutes promotions pour cette année
-        // Supposons que classes sont liées à l'année via promotions
-        fetch(`/api/classes-by-year/${yearId}`)
-            .then(res => res.json())
-            .then(data => {
-                addClassroom.innerHTML = '<option value="">-- Choisissez une classe --</option>';
-                data.forEach(c => {
-                    addClassroom.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-                });
-                addClassroom.disabled = false;
-            })
-            .catch(e => {
-                console.error('Erreur chargement classes:', e);
-                addClassroom.innerHTML = '';
-                addClassroom.disabled = true;
-            });
+        fetchOptions(`/api/sectors-by-year/${yearId}`, addSector, '-- Choisissez une filière --');
+        addPromotion.innerHTML = '';
+        addPromotion.disabled = true;
+        addClassroom.innerHTML = '';
+        addClassroom.disabled = true;
+    });
+
+    addSector.addEventListener('change', () => {
+        const yearId = addYear.value;
+        const sectorId = addSector.value;
+        fetchOptions(`/api/promotions-by-year-sector/${yearId}/${sectorId}`, addPromotion, '-- Choisissez une promotion --');
+        addClassroom.innerHTML = '';
+        addClassroom.disabled = true;
+    });
+
+    addPromotion.addEventListener('change', () => {
+        const promotionId = addPromotion.value;
+        fetchOptions(`/api/classes-by-promotion/${promotionId}`, addClassroom, '-- Choisissez une classe --');
+    });
+
+    // Effacer uniquement le champ de classe après soumission
+    document.getElementById('addStudentForm').addEventListener('submit', function () {
+        setTimeout(() => {
+            addClassroom.value = '';
+        }, 100); // léger délai pour éviter interférence
     });
 </script>
 @endsection

@@ -8,10 +8,12 @@ use App\Models\SectorYear;
 use App\Models\PromotionSector;
 use App\Models\PromotionClassroom;
 use App\Models\Student;
-use App\Models\Recording; // table pour inscrire élève/année/classe
+use App\Models\Recording;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Imports\StudentsImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StudentController extends Controller
 {
@@ -20,7 +22,6 @@ class StudentController extends Controller
     {
         try {
             $years = Year::where('status', true)->get();
-            // On ne charge pas encore secteurs, promotions, classes, ce sera via AJAX
             return view('dashboard.students.create', compact('years'));
         } catch (\Exception $e) {
             Log::error("Erreur accès création élèves : " . $e->getMessage());
@@ -28,7 +29,7 @@ class StudentController extends Controller
         }
     }
 
-    // Importation des élèves via fichier
+    // ✅ Importation des élèves via Laravel Excel
     public function import(Request $request)
     {
         $request->validate([
@@ -36,54 +37,23 @@ class StudentController extends Controller
             'sector_id' => 'required|exists:sectors,id',
             'promotion_id' => 'required|exists:promotion_sectors,id',
             'classroom_id' => 'required|exists:promotion_classrooms,id',
-            'file' => 'required|file|mimes:csv,xlsx,xls',
+            'file' => 'required|file|mimes:xlsx,xls,csv',
         ]);
 
-        // Traitement fichier (exemple simplifié)
-        $path = $request->file('file')->getRealPath();
-
-        // Lecture fichier, exemple CSV - adapter selon format
-        $data = array_map('str_getcsv', file($path));
-        // Supposons que la première ligne est l'entête
-        $header = array_map('strtolower', $data[0]);
-        unset($data[0]);
-
-        DB::beginTransaction();
-
         try {
-            foreach ($data as $row) {
-                $row = array_combine($header, $row);
+            Excel::import(new StudentsImport(
+                $request->classroom_id,
+                $request->year_id
+            ), $request->file('file'));
 
-                // Création ou récupération élève par matricule
-                $student = Student::firstOrCreate(
-                    ['matricule' => $row['matricule']],
-                    [
-                        'name' => $row['name'],
-                        'surname' => $row['surname'],
-                        'sex' => $row['sex'],
-                        'birthday' => $row['birthday'],
-                        'birthplace' => $row['birthplace'],
-                    ]
-                );
-
-                // Inscription dans la classe + année
-                Recording::updateOrCreate([
-                    'student_id' => $student->id,
-                    'year_id' => $request->year_id,
-                    'classroom_id' => $request->classroom_id,
-                ]);
-            }
-
-            DB::commit();
             return back()->with('success', 'Liste des élèves importée avec succès.');
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error("Erreur import élèves : " . $e->getMessage());
+            Log::error("Erreur import Excel élèves : " . $e->getMessage());
             return back()->withErrors('Erreur lors de l\'importation du fichier.');
         }
     }
 
-    // Ajout manuel d'un élève
+    // Ajout manuel d’un élève
     public function store(Request $request)
     {
         $rules = [
@@ -97,6 +67,7 @@ class StudentController extends Controller
             'birthplace' => 'required|string|max:255',
         ];
         $validator = Validator::make($request->all(), $rules);
+
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
@@ -127,7 +98,7 @@ class StudentController extends Controller
         }
     }
 
-    // API : Récupérer les filières (sectors) pour une année donnée
+    // API : Récupérer les filières pour une année donnée
     public function getSectorsByYear($yearId)
     {
         $sectorYears = SectorYear::with('sector')
@@ -142,7 +113,7 @@ class StudentController extends Controller
         return response()->json($sectors);
     }
 
-    // API : Récupérer les promotions pour une année + filière
+    // API : Promotions pour une année + filière
     public function getPromotionsByYearSector($yearId, $sectorId)
     {
         $sectorYear = SectorYear::where('year_id', $yearId)
@@ -157,11 +128,11 @@ class StudentController extends Controller
         return response()->json($promotions);
     }
 
-    // API : Récupérer les classes pour une promotion
+    // API : Classes d'une promotion
     public function getClassesByPromotion($promotionId)
     {
         $classes = PromotionClassroom::where('promotion_sector_id', $promotionId)
-            ->get(['id', 'classroom as name']);
+            ->get(['id', 'name']);
 
         return response()->json($classes);
     }
