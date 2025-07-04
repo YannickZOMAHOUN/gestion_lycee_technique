@@ -16,15 +16,15 @@ class PromotionSector extends Model
         return $this->belongsTo(SectorYear::class);
     }
 
-    // Facilité d’accès à l’année et à la filière directement :
     public function year()
     {
         return $this->sectorYear->year();
     }
 
-    public function sector()
+   public function sector()
     {
-        return $this->sectorYear->sector();
+        return $this->belongsTo(Sector::class);
     }
+
 }
 

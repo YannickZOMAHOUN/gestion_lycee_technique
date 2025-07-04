@@ -11,11 +11,14 @@ use App\Http\Controllers\SectorYearController;
 use App\Http\Controllers\PromotionSectorController;
 use App\Http\Controllers\PromotionClassroomController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\HomeController;
 
 // Page d'accueil
-Route::get('/', fn () => view('accueil'))->name('dashboard');
+Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Ressources principales (CRUD)
+
 Route::resources([
     'year' => YearController::class,
     'promotion' => PromotionController::class,
@@ -58,8 +61,12 @@ Route::post('/subjects/store', [SubjectController::class, 'store'])->name('subje
 Route::get('/api/ratios/sectors/{yearId}', [RatioController::class, 'getSectorsByYear']);
 Route::get('/api/ratios/promotions/{yearId}/{sectorId}', [RatioController::class, 'getPromotionsByYearAndSector']);
 Route::get('/api/ratios/data/{promotionId}/{yearId}', [RatioController::class, 'getSubjectsAndClasses']);
+Route::post('/import', [\App\Http\Controllers\StudentController::class, 'import'])->name('import');
+Route::get('/students/{year}/{sector}/{promotion}/{classroom}', [StudentController::class, 'getByFilter']);
+
+
+
+// Routes API pour chargement dynamique
 Route::get('/api/sectors-by-year/{yearId}', [StudentController::class, 'getSectorsByYear']);
 Route::get('/api/promotions-by-year-sector/{yearId}/{sectorId}', [StudentController::class, 'getPromotionsByYearSector']);
 Route::get('/api/classes-by-promotion/{promotionId}', [StudentController::class, 'getClassesByPromotion']);
-Route::get('/api/classes-by-promotion/{promotionId}', [StudentController::class, 'getClassesByPromotion']);
-Route::post('/import', [\App\Http\Controllers\StudentController::class, 'import'])->name('import');

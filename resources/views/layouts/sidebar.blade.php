@@ -41,7 +41,7 @@
             </a>
             <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
                 <li>
-                    <a href="#">
+                    <a href="{{ route('student.index') }}">
                         <i class="fas fa-list-ul"></i><span>&nbsp;Liste des élèves</span>
                     </a>
                 </li>

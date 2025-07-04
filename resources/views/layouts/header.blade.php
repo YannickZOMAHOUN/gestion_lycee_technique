@@ -12,7 +12,7 @@
 
     <!-- Application Title -->
     <div class="text-center flex-grow-1">
-        <h3 class="fs-6 text-uppercase font-medium text-color-avt mb-0">Gestion des Bulletins</h3>
+        <h3 class="fs-6 text-uppercase font-medium text-color-avt mb-0">Gestion Scolaire</h3>
     </div>
 
     <!-- User Profile / Navigation -->
