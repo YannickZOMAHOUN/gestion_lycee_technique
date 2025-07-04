@@ -30,7 +30,7 @@ class CreateNotesTable extends Migration
             $table->timestamps();
 
             // Unicité par élève + matière + semestre
-            $table->unique(['recording_id', 'subject_id', 'semester'], 'unique_note_per_semester');
+            $table->unique(['recording_id', 'subject_id','ratio_id', 'semester'], 'unique_note_per_semester');
         });
     }
 

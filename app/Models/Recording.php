@@ -8,15 +8,23 @@ class Recording extends Model
 {
     protected $fillable = ['student_id', 'year_id', 'classroom_id'];
 
-    public function student() {
+    public function student()
+    {
         return $this->belongsTo(Student::class);
     }
 
-    public function year() {
+    public function year()
+    {
         return $this->belongsTo(Year::class);
     }
 
-    public function classroom() {
+    public function classroom()
+    {
         return $this->belongsTo(PromotionClassroom::class);
+    }
+
+    public function notes()
+    {
+        return $this->hasMany(Note::class);
     }
 }

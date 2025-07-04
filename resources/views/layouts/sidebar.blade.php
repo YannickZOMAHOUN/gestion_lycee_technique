@@ -22,13 +22,13 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="{{ route('note.create') }}">
                         <i class="fas fa-plus-circle"></i><span>&nbsp;Nouvelle Note</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#">
-                        <i class="fas fa-file-alt"></i><span>&nbsp;Bulletins</span>
+                    <a href="{{ route('export_view') }}">
+                        <i class="fas fa-file-alt"></i><span>&nbsp;Exporter</span>
                     </a>
                 </li>
             </ul>

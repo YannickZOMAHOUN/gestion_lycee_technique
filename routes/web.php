@@ -12,6 +12,8 @@ use App\Http\Controllers\PromotionSectorController;
 use App\Http\Controllers\PromotionClassroomController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NoteController;
+
 
 // Page d'accueil
 Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
@@ -29,6 +31,7 @@ Route::resources([
     'sectorbyyear' => SectorYearController::class,
     'promotionbysector' => PromotionSectorController::class,
     'student' => StudentController::class,
+    'note'=>NoteController::class,
 ]);
 
 // Activation / Désactivation
@@ -70,3 +73,9 @@ Route::get('/students/{year}/{sector}/{promotion}/{classroom}', [StudentControll
 Route::get('/api/sectors-by-year/{yearId}', [StudentController::class, 'getSectorsByYear']);
 Route::get('/api/promotions-by-year-sector/{yearId}/{sectorId}', [StudentController::class, 'getPromotionsByYearSector']);
 Route::get('/api/classes-by-promotion/{promotionId}', [StudentController::class, 'getClassesByPromotion']);
+
+Route::get('/api/students-by-class/{classroom}/{year}', [NoteController::class, 'getStudents']);
+Route::get('/api/subjects-with-ratios/{classroom}/{year}', [NoteController::class, 'getSubjectsWithRatios']);
+Route::post('/api/notes/existing', [NoteController::class, 'getExistingNotes']);
+Route::get('/notes/export/download', [NoteController::class, 'export'])->name('notes.export');
+Route::get('/notes/export', [NoteController::class, 'export_view'])->name('export_view');
