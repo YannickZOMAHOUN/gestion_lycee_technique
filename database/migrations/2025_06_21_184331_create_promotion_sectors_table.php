@@ -18,6 +18,9 @@ return new class extends Migration
             $table->timestamps();
             $table->foreign('sector_year_id')->references('id')->on('sector_years')->onDelete('cascade');
             $table->unique(['sector_year_id', 'promotion_sector']);
+            $table->unsignedBigInteger('promotion_id')->nullable();
+            $table->foreign('promotion_id')->references('id')->on('promotions')->onDelete('cascade');
+
         });
     }
 

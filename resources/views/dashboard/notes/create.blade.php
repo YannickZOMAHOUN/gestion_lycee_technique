@@ -140,6 +140,7 @@
                                 <th class="rounded-start"><i class="fas fa-user me-2"></i>Nom</th>
                                 <th><i class="fas fa-user-tag me-2"></i>Prénom(s)</th>
                                 <th class="rounded-end"><i class="fas fa-marker me-2"></i>Note</th>
+                                <th class="rounded-end"><i class="fas fa-info-circle me-2"></i>Statut</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white"></tbody>
@@ -287,7 +288,7 @@
             // Affichage du loader
             notesTableBody.innerHTML = `
                 <tr>
-                    <td colspan="3" class="text-center py-4">
+                    <td colspan="4" class="text-center py-4">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Chargement...</span>
                         </div>
@@ -319,6 +320,9 @@
                                 <input type="number" name="grades[]" class="form-control grade-input" step="0.01" min="0" max="20" placeholder="0.00">
                                 <span class="input-group-text">/20</span>
                             </div>
+                        </td>
+                        <td class="status-cell">
+                            <span class="badge bg-secondary">Actif</span>
                         </td>`;
                     notesTableBody.appendChild(row);
                 });
@@ -331,6 +335,7 @@
                     option.textContent = r.subject.name;
                     option.dataset.coefficient = r.coefficient;
                     option.dataset.subjectId = r.subject.id;
+                    option.dataset.subjectName = r.subject.name.toLowerCase(); // Pour vérifier EPS
                     subjectSelect.appendChild(option);
                 });
 
@@ -339,7 +344,7 @@
                 console.error('Erreur:', error);
                 notesTableBody.innerHTML = `
                     <tr>
-                        <td colspan="3" class="text-center text-danger py-4">
+                        <td colspan="4" class="text-center text-danger py-4">
                             <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
                             <p>Erreur lors du chargement des données</p>
                         </td>
@@ -353,6 +358,56 @@
             const opt = this.options[this.selectedIndex];
             ratioInput.value = opt.getAttribute('data-coefficient');
             ratioIdInput.value = opt.value;
+
+            // Vérifier si la matière est EPS
+            const isEPS = opt.getAttribute('data-subject-name') === 'eps';
+
+            // Récupérer les dispenses si c'est EPS
+            if (isEPS) {
+                try {
+                    const classroomId = classroomSelect.value;
+                    const yearId = yearSelect.value;
+                    const res = await fetch(`/api/students-dispensations/${classroomId}/${yearId}`);
+                    const dispensations = await res.json();
+
+                    // Mettre à jour le statut des étudiants
+                    document.querySelectorAll('tr').forEach((row, index) => {
+                        if (index > 0) { // Skip header row
+                            const recordingId = row.querySelector('input[name="students[]"]').value;
+                            const statusCell = row.querySelector('.status-cell');
+                            const gradeInput = row.querySelector('.grade-input');
+
+                            if (dispensations.includes(parseInt(recordingId))) {
+                                statusCell.innerHTML = '<span class="badge bg-warning text-dark">Dispensé</span>';
+                                gradeInput.value = '';
+                                gradeInput.disabled = true;
+                                gradeInput.placeholder = 'Dispensé';
+                                gradeInput.classList.add('bg-light');
+                            } else {
+                                statusCell.innerHTML = '<span class="badge bg-success">Actif</span>';
+                                gradeInput.disabled = false;
+                                gradeInput.placeholder = '0.00';
+                                gradeInput.classList.remove('bg-light');
+                            }
+                        }
+                    });
+
+                    showToast('info', 'Statuts des étudiants mis à jour pour EPS');
+                } catch (error) {
+                    console.error('Erreur:', error);
+                    showToast('error', 'Erreur lors du chargement des dispenses');
+                }
+            } else {
+                // Réinitialiser tous les champs si ce n'est pas EPS
+                document.querySelectorAll('.grade-input').forEach(input => {
+                    input.disabled = false;
+                    input.placeholder = '0.00';
+                    input.classList.remove('bg-light');
+                });
+                document.querySelectorAll('.status-cell').forEach(cell => {
+                    cell.innerHTML = '<span class="badge bg-success">Actif</span>';
+                });
+            }
 
             // Préremplissage des notes existantes pour les devoirs
             const type = typeSelect.value;
@@ -379,8 +434,10 @@
 
                     const data = await res.json();
                     document.querySelectorAll('input[name="grades[]"]').forEach((input, index) => {
-                        const rid = recording_ids[index];
-                        if (data[rid]) input.value = data[rid];
+                        if (!input.disabled) { // Ne pas remplir pour les dispensés
+                            const rid = recording_ids[index];
+                            if (data[rid]) input.value = data[rid];
+                        }
                     });
 
                     showToast('info', 'Notes existantes chargées');
@@ -395,7 +452,7 @@
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                const inputs = [...document.querySelectorAll('.grade-input')];
+                const inputs = [...document.querySelectorAll('.grade-input:not(:disabled)')];
                 const index = inputs.indexOf(document.activeElement);
 
                 if (index > -1 && index < inputs.length - 1) {
@@ -411,9 +468,11 @@
             const val = globalNoteInput.value;
             if (val >= 0 && val <= 20) {
                 document.querySelectorAll('input[name="grades[]"]').forEach(input => {
-                    input.value = val;
-                    input.classList.add('bg-success-light');
-                    setTimeout(() => input.classList.remove('bg-success-light'), 1000);
+                    if (!input.disabled) { // Ne pas remplir pour les dispensés
+                        input.value = val;
+                        input.classList.add('bg-success-light');
+                        setTimeout(() => input.classList.remove('bg-success-light'), 1000);
+                    }
                 });
             }
         });
@@ -423,7 +482,7 @@
             e.preventDefault();
 
             // Validation des notes
-            const grades = [...document.querySelectorAll('input[name="grades[]"]')];
+            const grades = [...document.querySelectorAll('input[name="grades[]"]:not(:disabled)')];
             const isValid = grades.every(input => {
                 const val = parseFloat(input.value);
                 return !isNaN(val) && val >= 0 && val <= 20;
@@ -553,6 +612,19 @@
     .grade-input:focus {
         border-color: #28a745;
         box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+    }
+
+    /* Style pour les badges de statut */
+    .badge {
+        font-size: 0.85em;
+        padding: 0.35em 0.65em;
+        font-weight: 500;
+    }
+
+    /* Style pour les champs désactivés */
+    .grade-input:disabled {
+        background-color: #f8f9fa;
+        cursor: not-allowed;
     }
 </style>
 @endsection

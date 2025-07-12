@@ -7,9 +7,13 @@ use App\Models\Year;
 use App\Models\Ratio;
 use App\Models\Recording;
 use Illuminate\Http\Request;
+use App\Models\PromotionClassroom;
 use Illuminate\Support\Facades\DB;
 use App\Exports\NotesExport;
+use App\Models\Subject;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
+
 
 
 class NoteController extends Controller
@@ -18,6 +22,12 @@ class NoteController extends Controller
     {
         $years =Year::where('status', true)->get();
         return view('dashboard.notes.create', compact('years'));
+    }
+
+     public function index()
+    {
+        $years =Year::where('status', true)->get();
+        return view('dashboard.notes.list', compact('years'));
     }
 
     public function getStudents($classroomId, $yearId)
@@ -36,12 +46,15 @@ class NoteController extends Controller
         }));
     }
 
+
     public function getSubjectsWithRatios($classroomId, $yearId)
     {
         $ratios = Ratio::with('subject')
             ->where('classroom_id', $classroomId)
             ->where('year_id', $yearId)
             ->get();
+
+        Log::info('Ratios chargés', ['ratios' => $ratios]);
 
         return response()->json($ratios);
     }
@@ -113,28 +126,74 @@ class NoteController extends Controller
         }
     }
 
-
-
     public function export(Request $request)
-{
-    $request->validate([
-        'year_id' => 'required|exists:years,id',
-        'classroom_id' => 'required|exists:promotion_classrooms,id',
-        'semester' => 'required|in:1,2',
-    ]);
-
-    $year = $request->year_id;
-    $classroom = $request->classroom_id;
-    $semester = $request->semester;
-
-    $filename = "Notes_Classe_{$classroom}_Semestre{$semester}.xlsx";
-
-    return Excel::download(new NotesExport($year, $classroom, $semester), $filename);
-}
-
-  public function export_view()
     {
-        $years =Year::where('status', true)->get();
+        $request->validate([
+            'year_id' => 'required|exists:years,id',
+            'classroom_id' => 'required|exists:promotion_classrooms,id',
+            'semester' => 'required|in:1,2',
+        ]);
+
+        try {
+            // Récupération du nom de la classe
+            $classroom = PromotionClassroom::findOrFail($request->classroom_id);
+            $className = str_replace(' ', '_', $classroom->name); // Optionnel : remplace les espaces par des underscores
+
+            // Génération du nom de fichier
+            $filename = "Notes_Classe_{$className}_Semestre{$request->semester}.xlsx";
+
+            return Excel::download(
+                new NotesExport($request->year_id, $request->classroom_id, $request->semester),
+                $filename
+            );
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Erreur lors de l\'export : ' . $e->getMessage());
+        }
+    }
+
+    public function export_view()
+    {
+        $years = Year::where('status', true)->get();
         return view('dashboard.notes.export', compact('years'));
     }
+
+ public function byClassAndSemester($classroom_id, $year_id, $semester)
+{
+    $students = Recording::with(['student', 'notes' => function ($q) use ($semester) {
+        $q->where('semester', $semester)->with('subject');
+    }])->where('classroom_id', $classroom_id)
+      ->where('year_id', $year_id)
+      ->get();
+
+    return $students->map(function ($rec) {
+        return [
+            'id' => $rec->id,
+            'name' => $rec->student->name,
+            'surname' => $rec->student->surname,
+            'matricule' => $rec->student->matricule,
+            'notes' => $rec->notes->map(function ($note) {
+                return [
+                    'id' => $note->id,
+                    'subject' => $note->subject->name,
+                    'interros' => $note->interros ?? [],
+                    'devoir1' => $note->devoir1,
+                    'devoir2' => $note->devoir2,
+                ];
+            }),
+        ];
+    });
+}
+
+public function update(Request $request, Note $note)
+{
+    $note->update([
+        'interros' => $request->input('interros'),
+        'devoir1' => $request->input('devoir1'),
+        'devoir2' => $request->input('devoir2'),
+    ]);
+
+    return response()->json(['message' => 'Note mise à jour avec succès']);
+}
+
+
 }

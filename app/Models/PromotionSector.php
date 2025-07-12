@@ -9,7 +9,7 @@ class PromotionSector extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['sector_year_id', 'promotion_sector'];
+    protected $fillable = ['sector_year_id', 'promotion_sector', 'promotion_id'];
 
     public function sectorYear()
     {
@@ -24,6 +24,11 @@ class PromotionSector extends Model
    public function sector()
     {
         return $this->belongsTo(Sector::class);
+    }
+
+    public function promotion()
+    {
+        return $this->belongsTo(Promotion::class);
     }
 
 }

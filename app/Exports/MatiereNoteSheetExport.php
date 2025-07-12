@@ -7,8 +7,10 @@ use App\Models\Recording;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class MatiereNoteSheetExport implements FromCollection, WithTitle, WithHeadings
+class MatiereNoteSheetExport implements FromCollection, WithTitle, WithHeadings, WithColumnFormatting
 {
     protected $classroomId;
     protected $yearId;
@@ -29,6 +31,13 @@ class MatiereNoteSheetExport implements FromCollection, WithTitle, WithHeadings
     public function headings(): array
     {
         return ['Matricule', 'Nom', 'Prénom', 'Moyenne Interros', 'Devoir 1', 'Devoir 2'];
+    }
+
+    public function columnFormats(): array
+    {
+        return [
+            'A' => NumberFormat::FORMAT_TEXT, // Colonne A = Matricule
+        ];
     }
 
     public function collection()
@@ -54,7 +63,7 @@ class MatiereNoteSheetExport implements FromCollection, WithTitle, WithHeadings
             $moyenneInterro = $interros->count() ? round($interros->avg(), 2) : null;
 
             return [
-                $rec->student->matricule ?? '',
+                (string) ($rec->student->matricule ?? ''), // Matricule converti en string
                 $rec->student->name,
                 $rec->student->surname,
                 $moyenneInterro,

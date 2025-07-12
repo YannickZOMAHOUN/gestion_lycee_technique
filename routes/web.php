@@ -79,3 +79,8 @@ Route::get('/api/subjects-with-ratios/{classroom}/{year}', [NoteController::clas
 Route::post('/api/notes/existing', [NoteController::class, 'getExistingNotes']);
 Route::get('/notes/export/download', [NoteController::class, 'export'])->name('notes.export');
 Route::get('/notes/export', [NoteController::class, 'export_view'])->name('export_view');
+Route::get('/notes/fetch', [NoteController::class, 'getStudentNotes'])->name('get.student.notes');
+Route::get('/note/{student}', [NoteController::class, 'show'])->name('note.show');
+
+Route::get('/api/notes-by-class-semester/{classroom_id}/{year_id}/{semester}', [NoteController::class, 'byClassAndSemester']);
+Route::put('/api/notes/{note}', [NoteController::class, 'update']);
